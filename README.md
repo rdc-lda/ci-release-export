@@ -82,27 +82,26 @@ A release consists of a name, version, type (full or update), description and a 
 ~~~yaml
 {
    "name": "my-release",
-   "version" : "x.y.z",
+   "version": "x.y.z",
    "type": "full",
    "description": "Adds features a, b, c.",
    "platform": "openshift",
-   "artefacts": [
-      {
-         "my-web-component": {
-            "version": "a.b.c"
+   "artefacts": {
+      "artefact": [
+         {
+            "name": "my-web-app",
+            "version": "x.y.z"
+         },
+         {
+            "name": "my-service-1",
+            "version": "x.y.z"
+         },
+         {
+            "name": "my-service-2",
+            "version": "x.y.z"
          }
-      },
-      {
-         "my-service-1": {
-            "version": "a.b.c"
-         }
-      },
-      {
-         "my-service-2": {
-            "version": "a.b.c"
-         }
-      }
-   ]
+      ]
+   }
 }
 ~~~
 
@@ -128,6 +127,10 @@ Assure you have set in environment the following variables.
 }
 ~~~
 
+### Release destination properties
+
+Similar to the source connection, you also need to provide a destination. For the pipeline always use `local` since the containers will link via workspaces. `S3` is also supported, see previous paragraph for example.
+
 #### SFTP example
 
 Assure you have set in environment the following variables.
@@ -146,11 +149,9 @@ Assure you have set in environment the following variables.
 }
 ~~~
 
-### Release destination properties
-
-Similar to the source connection, you also need to provide a destination. For the pipeline always use `local` since the containers will link via workspaces. `S3` and `SFTP` are also supported, see previous paragraph for examples.
-
 #### Local example
+
+Note the `base_dir` here needs to match your CI/CD pipeline's workspace directory (writable and transferable to next stages).
 
 ~~~yaml
 {
