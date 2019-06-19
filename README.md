@@ -122,59 +122,102 @@ Assure you have set in environment the following variables.
 {
    "endpoint": {
       "type": "s3",
-      "base_url": "s3://s3.ap-south-1.amazonaws.com/my-releases"
+      "base_url": "s3://my-releases"
    }
 }
 ~~~
 
-### Release destination properties
-
-Similar to the source connection, you also need to provide a destination. For the pipeline always use `local` since the containers will link via workspaces. `S3` is also supported, see previous paragraph for example.
-
-#### SFTP example
-
-Assure you have set in environment the following variables.
-
-| Variable | Description | Example |
-|--- |--- |---|
-| `SFTP_USER` | Your username giving access to the SFTP hosted release repository | `user123` |
-| `SFTP_PASSWORD` | Your password giving access to the SFTP hosted release repository | `S0meth1n9L0n9AndH@rdT0Gu355` |
-
-~~~yaml
-{
-   "endpoint": {
-      "type": "sftp",
-      "base_url": "sftp://sftp.host.domain:22/my-releases"
-   }
-}
-~~~
-
-#### Local example
-
-Note the `base_dir` here needs to match your CI/CD pipeline's workspace directory (writable and transferable to next stages).
-
-~~~yaml
-{
-   "endpoint": {
-      "type": "local",
-      "base_dir": "./artefacts"
-   }
-}
-~~~
-
-### CircleCI
+### CircleCI - download release
 
 Just copy the YAML into your build definition:
 
 ~~~yaml
-TODO
+jobs:
+
+  # Download the release artefacts
+  download_release:
+    docker:
+      - image: rdclda/ci-export-release
+    working_directory: ~/release
+    steps:
+      # Checkout the repository
+      - checkout
+
+      # Create workspace output folder
+      - run:
+          name: Create workspace directory
+          command: mkdir -p ./artefacts
+
+      # Retrieve the artefacts
+      - run:
+          name: Export artefacts to its defined destination
+          command: |
+            download-release \
+              --source=release-source.json \
+              --manifest=release-manifest.json \
+              --destination=./artefacts
+
+      # Copy the release manifest into the workspace
+      - run:
+          name: Copy release manifest
+          command: cp ./release-manifest.json artefacts/
+
+      - persist_to_workspace:
+          # Must be an absolute path, or relative path from working_directory
+          root: ~/release
+          # Must be relative path from root
+          paths:
+             - artefacts/
 ~~~
 
-...and enable to validate step after the build phase in the overall flow:
+### CircleCI - validate release
+
+Just copy the YAML into your build definition:
+
+~~~yaml
+jobs:
+
+  # Validate the downloaded release
+  validate_release:
+    docker:
+      - image: rdclda/ci-export-release
+    working_directory: ~/release
+    steps:
+      - attach_workspace:
+          # Must be absolute path or relative path from working_directory
+          at: ~/release
+
+      # Retrieve the artefacts
+      - run:
+          name: Validate the artefacts
+          command: |
+            validate-release \
+              --source=./artefacts \
+              --manifest=./artefacts/release-manifest.json
+~~~
+
+### CircleCI - push release
+
+Just copy the YAML into your build definition:
+
+~~~yaml
+jobs:
+
+  # TODO
+~~~
+
+...and enable to export step in the overall flow:
 
 ~~~yaml
 # Glue the jobs together
-TODO
+workflows:
+  version: 2
+  deploy:
+    jobs:
+      - download_release
+      - validate_release:
+          requires:
+            - download_release
 ~~~
 
 ## Contributing
