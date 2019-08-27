@@ -18,16 +18,16 @@ function usage {
 for i in "$@"; do
     case $i in
         -s=*|--source=*)
-        SOURCE="${i#*=}"
-        shift # past argument=value
+            SOURCE="${i#*=}"
+            shift # past argument=value
         ;;
         -d=*|--destination=*)
-        RELEASE_DIR="${i#*=}"
-        shift # past argument=value
+            RELEASE_DIR="${i#*=}"
+            shift # past argument=value
         ;;
         -m=*|--manifest=*)
-        MANIFEST="${i#*=}"
-        shift # past argument=value
+            MANIFEST="${i#*=}"
+            shift # past argument=value
         ;;
         *)
             # unknown option
@@ -56,22 +56,41 @@ if [ -z "$MANIFEST" -o ! -f "$MANIFEST" ]; then
     exit 102
 fi
 
-if [ -z "$AWS_ACCESS_KEY_ID" -o -z "$AWS_SECRET_ACCESS_KEY" ]; then
-    log ERROR "AWS Access or Secret keys not found in environment, exit."
-    log WARN "Exit process with error code 200."
-    exit 200
-fi
-
 #
 # Download logic
+SOURCE_TYPE="$(cat $SOURCE | jq -r '.endpoint.type')"
 
-# Download the release from source
-S3_BUCKET="$(cat $SOURCE | jq -r '.endpoint.base_url')"
+case $SOURCE_TYPE in
+    s3)
+        log INFO "Source for release set to AWS S3"
+    ;;
+    *)
+        # Unknown option
+        log ERROR "Source for release set to $SOURCE_TYPE, not yet supported!"
+        log WARN "Exit process with error code 201."
+        exit 201
+    ;;
+esac
 
-for ARTEFACT_NAME in $(cat $MANIFEST | jq -r '.artefacts.artefact[].name'); do
-    log "Start downloading artefact $ARTEFACT_NAME from S3 bucket $S3_BUCKET..."
-    mkdir -p $RELEASE_DIR/$ARTEFACT_NAME
-    ARTEFACT_VERSION=$(cat $MANIFEST | jq -r '.artefacts.artefact[] | select(.name == "'$ARTEFACT_NAME'") | .version')
-    aws s3 cp $S3_BUCKET/$ARTEFACT_NAME/$ARTEFACT_VERSION $RELEASE_DIR/$ARTEFACT_NAME --recursive
-    log "Finished downloading artefact $ARTEFACT_NAME."
-done
+# AWS S3
+if [ "$SOURCE_TYPE" = "s3" ]; then
+    if [ -z "$SOURCE_AWS_ACCESS_KEY_ID" -o -z "$SOURCE_AWS_SECRET_ACCESS_KEY" ]; then
+        log ERROR "AWS Access or Secret keys not found in environment, exit."
+        log WARN "Exit process with error code 200."
+        exit 200
+    fi
+
+    export AWS_ACCESS_KEY_ID=$SOURCE_AWS_ACCESS_KEY_ID
+    export AWS_SECRET_ACCESS_KEY=$SOURCE_AWS_SECRET_ACCESS_KEY
+
+    # Download the release from source
+    S3_BUCKET="$(cat $SOURCE | jq -r '.endpoint.base_url')"
+
+    for ARTEFACT_NAME in $(cat $MANIFEST | jq -r '.artefacts.artefact[].name'); do
+        log "Start downloading artefact $ARTEFACT_NAME from S3 bucket $S3_BUCKET..."
+        mkdir -p $RELEASE_DIR/$ARTEFACT_NAME
+        ARTEFACT_VERSION=$(cat $MANIFEST | jq -r '.artefacts.artefact[] | select(.name == "'$ARTEFACT_NAME'") | .version')
+        aws s3 cp $S3_BUCKET/$ARTEFACT_NAME/$ARTEFACT_VERSION $RELEASE_DIR/$ARTEFACT_NAME --recursive
+        log "Finished downloading artefact $ARTEFACT_NAME."
+    done
+fi

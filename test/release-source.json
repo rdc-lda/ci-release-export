@@ -1,0 +1,6 @@
+{
+    "endpoint": {
+       "type": "s3",
+       "base_url": "s3://cbx-releases"
+    }
+ }

@@ -77,7 +77,9 @@ Use the Docker image in your CI tooling - you need to specify the following as p
 
 ### Release manifest definition
 
-A release consists of a name, version, type (full or update), description and a list of artefacts:
+A release consists of a name, version, type (full or update), description and a list of artefacts.
+
+An example `release-manifest.json` is provided below:
 
 ~~~yaml
 {
@@ -115,8 +117,10 @@ Assure you have set in environment the following variables.
 
 | Variable | Description | Example |
 |--- |--- |---|
-| `AWS_ACCESS_KEY_ID` | Your AWS Access Key giving access to the S3 hosted release repository | `MAHYIBA123CS3MUKN456` |
-| `AWS_SECRET_ACCESS_KEY` | Your AWS Secret Key giving access to the S3 hosted release repository | `zIlwT3123R93Zt3iTu7twN1yuE4Dhbjli143456` |
+| `[SOURCE|DESTINATION]_AWS_ACCESS_KEY_ID` | Your AWS Access Key giving access to the S3 hosted release repository | `MAHYIBA123CS3MUKN456` |
+| `[SOURCE|DESTINATION]_AWS_SECRET_ACCESS_KEY` | Your AWS Secret Key giving access to the S3 hosted release repository | `zIlwT3123R93Zt3iTu7twN1yuE4Dhbjli143456` |
+
+An example `release-source.json` or `release-destination.json` is provided below:
 
 ~~~yaml
 {
@@ -125,6 +129,60 @@ Assure you have set in environment the following variables.
       "base_url": "s3://my-releases"
    }
 }
+~~~
+
+#### SFTP example
+
+Assure you have set in environment the following variables.
+
+| Variable | Description | Example |
+|--- |--- |---|
+| `[SOURCE|DESTINATION]_SFTP_USERNAME` | Your SFTP username giving access to the SFTP hosted directory | `user123` |
+| `[SOURCE|DESTINATION]_SFTP_PASSWORD` | Your AWS Secret Key giving access to the S3 hosted release repository | `S0m3th1n9L0n9AndH@rd!` |
+
+An example `release-source.json` or `release-destination.json` is provided below:
+
+~~~yaml
+{
+    "endpoint": {
+       "type": "sftp",
+       "host": "my-sftp.mydomain.com",
+       "port": "22",
+       "base_dir": "/upload"
+    }
+ }
+~~~
+
+**Tip**: *in order to setup and secure an SFTP Server per user basis, use [this document](./SFTP-Server-Centos.md).*
+
+### Manual download, validate and push release
+
+This section describes how to publish a release to the software vault of the client.
+
+1. Assure you have created the `release-source.json`, `release-destination.json` and `release-manifest.json` files in a `manifest directory` on your machine
+1. Assure you have enough disk space locally to accommodate for the release
+1. Export the `AWS` credentials in order to retrieve files from the CBX releases to your shell
+1. Export the `SFTP` credentials for the destination server to your shell
+1. Run the Docker command below to download, validate and push the release
+
+~~~bash
+# Set your AWS access keys -- assuming you use S3 as the source for the release
+$ export SOURCE_AWS_ACCESS_KEY_ID=your_key_id_here
+$ export SOURCE_AWS_SECRET_ACCESS_KEY=your_access_key_here
+
+# Set your SFTP credentials -- assuming you use SFTP as the destination for the release
+$ export DESTINATION_SFTP_USERNAME=your_username
+$ export DESTINATION_SFTP_PASSWORD=your_password
+
+# Provide the manifest directory on the host and a temporarily directory
+$ docker run \
+  -v $PWD/test:/var/data/manifests \
+  -v /tmp/release-download:/var/data/release-download \
+  -e SOURCE_AWS_ACCESS_KEY_ID="$SOURCE_AWS_ACCESS_KEY_ID" \
+  -e SOURCE_AWS_SECRET_ACCESS_KEY="$SOURCE_AWS_SECRET_ACCESS_KEY" \
+  -e DESTINATION_SFTP_USERNAME="$DESTINATION_SFTP_USERNAME" \
+  -e DESTINATION_SFTP_PASSWORD="$DESTINATION_SFTP_PASSWORD" \
+  rdclda/ci-export-release
 ~~~
 
 ### CircleCI - download release

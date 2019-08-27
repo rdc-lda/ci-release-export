@@ -1,0 +1,8 @@
+{
+    "endpoint": {
+       "type": "sftp",
+       "host": "ec2-35-180-46-227.eu-west-3.compute.amazonaws.com",
+       "port": 22,
+       "base_dir": "/upload"
+    }
+ }

@@ -1,0 +1,29 @@
+{
+    "name": "goncalo-release",
+    "version": "0.1.5",
+    "type": "full",
+    "description": "Test case manifest for Goncalo",
+    "platform": "openshift",
+    "runtime_images": {
+       "java" : "registry.redhat.io/redhat-openjdk-18/openjdk18-openshift",
+       "node" : "registry.redhat.io/rhoar-nodejs/nodejs-8",
+       "python": "python/3.8.0b1-slim-stretch",
+       "golang": "golang/1.12.6-alpine"
+    },
+    "artefacts": {
+       "artefact": [
+          {
+             "name": "digital-registry",
+             "version": "release_1.0.2"
+          },
+          {
+             "name": "digital-config",
+             "version": "release_1.0.2"
+          },
+          {
+             "name": "digital-gatekeeper",
+             "version": "release_0.0.8"
+          }
+       ]
+    }
+ }

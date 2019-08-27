@@ -18,12 +18,12 @@ function usage {
 for i in "$@"; do
     case $i in
         -s=*|--source=*)
-        RELEASE_DIR="${i#*=}"
-        shift # past argument=value
+            RELEASE_DIR="${i#*=}"
+            shift # past argument=value
         ;;
         -m=*|--manifest=*)
-        MANIFEST="${i#*=}"
-        shift # past argument=value
+            MANIFEST="${i#*=}"
+            shift # past argument=value
         ;;
         *)
             # unknown option
