@@ -107,7 +107,7 @@ An example `release-manifest.json` is provided below:
 }
 ~~~
 
-### Release source credentials
+### Release source - destination credentials
 
 The release source (in the directory structure as shown above) needs to be made accessible; hence the file below needs to be defined including some environment variables (since you do not want to persist and expose credentials via source control!).
 

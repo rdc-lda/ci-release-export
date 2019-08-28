@@ -44,9 +44,12 @@ if [ ! -d $RELEASE_DIR ]; then
         --destination=$MANIFESTS_DIR/release-destination.json \
         --manifest=$MANIFESTS_DIR/release-manifest.json
 
+    # Clean up
+    log INFO "Removing local release artefacts..."
+    rm -Rf $RELEASE_DIR
+
 else
     log ERROR "Existing release directory found: $RELEASE_NAME/$RELEASE_VERSION, aborting!"
     log WARN "Exit process with error code 101."
     exit 101    
 fi
-

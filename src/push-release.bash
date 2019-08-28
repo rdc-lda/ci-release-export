@@ -141,4 +141,11 @@ if [ "$DESTINATION_TYPE" = "sftp" ]; then
         sshpass -e sftp -o "StrictHostKeyChecking no" -oBatchMode=no -b upload_directory -P $PORT $SFTP_URI &> /dev/null
         log "Finished uploading artefact $ARTEFACT_NAME."
     done
+
+    # Finally... copy the release manifest!
+    log "Start uploading release manifest..."
+    sshpass -e sftp -o "StrictHostKeyChecking no" -P $PORT $SFTP_URI:$BASE_DIR/$RELEASE_NAME-$RELEASE_VERSION <<< $'put '$MANIFEST &> /dev/null
+    log "Finished uploading release manifest."
 fi
+
+# Finally... copy the release manifest!
