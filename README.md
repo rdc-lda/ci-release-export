@@ -39,7 +39,7 @@ artefactA
         └── performance.pdf
 ~~~
 
-This CI Docker image helps you extracting a release from your main release gateway exporting only those artefacts / versions which are required.
+This CI Docker image helps you extracting a release from your main release gateway exporting only those artefacts / versions which are required to a designated endpoint (the software client vault) such as SFTP or S3.
 
 ## Getting Started
 
@@ -107,9 +107,9 @@ An example `release-manifest.json` is provided below:
 }
 ~~~
 
-### Release source properties
+### Release source credentials
 
-The release source (in the directory structure as shown above) needs to be made accessible; hence the file below needs to be defined including some environment variables (since you do not want to expose credentials via source control!).
+The release source (in the directory structure as shown above) needs to be made accessible; hence the file below needs to be defined including some environment variables (since you do not want to persist and expose credentials via source control!).
 
 #### AWS S3 example
 
@@ -261,7 +261,24 @@ Just copy the YAML into your build definition:
 ~~~yaml
 jobs:
 
-  # TODO
+  # Validate the downloaded release
+  validate_release:
+    docker:
+      - image: rdclda/ci-export-release
+    working_directory: ~/release
+    steps:
+      - attach_workspace:
+          # Must be absolute path or relative path from working_directory
+          at: ~/release
+
+      # Retrieve the artefacts
+      - run:
+          name: Validate the artefacts
+          command: |
+            push-release \
+              --source=./artefacts \
+              --manifest=./artefacts/release-manifest.json \
+              --destination=./artefacts/release-destination.json
 ~~~
 
 ...and enable to export step in the overall flow:
@@ -276,6 +293,9 @@ workflows:
       - validate_release:
           requires:
             - download_release
+      - push_release:
+          requires:
+            - validate_release
 ~~~
 
 ## Contributing
